@@ -19,7 +19,10 @@ public:
         _size(0),
         _overwriteWhenFull(overwriteWhenFull),
         _buffer(new unsigned char[capacityInBytes])
-    {}
+    {
+        // todo: handle the _overwriteWhenFull variation of CircularBuffer along with tests
+        assert(_overwriteWhenFull == false);
+    }
 
     ~CircularBuffer()
     {
@@ -217,6 +220,12 @@ void testCircularBufferNoOverwriteWhenFullMultiByte()
     }
 }
 
+void testCircularBufferNoOverwriteWhenFullMultiByteWritesAndReadsInterspersed()
+{
+    // todo
+    cout << "testCircularBufferNoOverwriteWhenFullMultiByteWritesAndReadsInterspersed() --- TODO ---" << endl;
+}
+
 void testCircularBufferNoOverwriteWhenFullSingleByte()
 {
     unsigned char input[] = { 1,2,3,4,5,6,7,8, };
@@ -354,13 +363,15 @@ void testCircularBufferNoOverwriteWhenFullSingleByte()
 
 void testCircularBufferYesOverwriteWhenFull()
 {
-    CircularBuffer cb(5, false);
+    // todo
+    cout << "testCircularBufferYesOverwriteWhenFull() --- TODO ---" << endl;
 }
 
 int main()
 {
     testCircularBufferNoOverwriteWhenFullSingleByte();
     testCircularBufferNoOverwriteWhenFullMultiByte();
+    testCircularBufferNoOverwriteWhenFullMultiByteWritesAndReadsInterspersed();
     testCircularBufferYesOverwriteWhenFull();
 
     return 0;
