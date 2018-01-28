@@ -6,6 +6,7 @@
 #include <cassert>
 #include <algorithm>
 #include <vector>
+#include <memory>
 
 using namespace std;
 
@@ -18,7 +19,7 @@ public:
         _iConsumer(0), // consumer index should never pass producer index
         _size(0),
         _overwriteWhenFull(overwriteWhenFull),
-        _buffer(new unsigned char[capacityInBytes])
+        _buffer(make_unique<unsigned char[]>(capacityInBytes))
     {
         // todo: handle the _overwriteWhenFull variation of CircularBuffer along with tests
         assert(_overwriteWhenFull == false);
@@ -26,7 +27,6 @@ public:
 
     ~CircularBuffer()
     {
-        delete[] _buffer;
     }
 
     bool empty()
@@ -55,7 +55,7 @@ public:
         if (_iProducer < _iConsumer)
         {
             // all the available write space (i.e. writableBytes) is between _iProducer and _iConsumer
-            memmove((_buffer + _iProducer), buffer, totalBytesToWrite);
+            memmove((_buffer.get() + _iProducer), buffer, totalBytesToWrite);
         }
         else //(_iProducer >= _iConsumer)
         {
@@ -65,13 +65,13 @@ public:
             const int bytesAvailableBetweeniProducerAndEndOfBuffer = _capacity - _iProducer;
             if (bytesAvailableBetweeniProducerAndEndOfBuffer >= totalBytesToWrite)
             {
-                memmove((_buffer + _iProducer), buffer, totalBytesToWrite);
+                memmove((_buffer.get() + _iProducer), buffer, totalBytesToWrite);
             }
             else
             {
-                memmove((_buffer + _iProducer), buffer, bytesAvailableBetweeniProducerAndEndOfBuffer);
+                memmove((_buffer.get() + _iProducer), buffer, bytesAvailableBetweeniProducerAndEndOfBuffer);
                 void *callerBufferOffset = static_cast<void*>(static_cast<unsigned char *>(buffer) + bytesAvailableBetweeniProducerAndEndOfBuffer);
-                memmove(_buffer, callerBufferOffset, (totalBytesToWrite - bytesAvailableBetweeniProducerAndEndOfBuffer));
+                memmove(_buffer.get(), callerBufferOffset, (totalBytesToWrite - bytesAvailableBetweeniProducerAndEndOfBuffer));
             }
         }
 
@@ -98,7 +98,7 @@ public:
         if (_iConsumer < _iProducer)
         {
             // all the requested read bytes (i.e. totalBytesToRead) are between _iConsumer and _iProducer 
-            memmove(buffer, (_buffer + _iConsumer), totalBytesToRead);
+            memmove(buffer, (_buffer.get() + _iConsumer), totalBytesToRead);
         }
         else // (_iConsumer > _iProducer)
         {
@@ -108,13 +108,13 @@ public:
             const int bytesAvailableBetweeniConsumerAndEndOfBuffer = _capacity - _iConsumer;
             if (totalBytesToRead <= bytesAvailableBetweeniConsumerAndEndOfBuffer)
             {
-                memmove(buffer, (_buffer + _iConsumer), totalBytesToRead);
+                memmove(buffer, (_buffer.get() + _iConsumer), totalBytesToRead);
             }
             else
             {
-                memmove(buffer, (_buffer + _iConsumer), bytesAvailableBetweeniConsumerAndEndOfBuffer);
+                memmove(buffer, (_buffer.get() + _iConsumer), bytesAvailableBetweeniConsumerAndEndOfBuffer);
                 void *callerBufferOffset = static_cast<void*>(static_cast<unsigned char *>(buffer) + bytesAvailableBetweeniConsumerAndEndOfBuffer);
-                memmove(callerBufferOffset, _buffer, (totalBytesToRead - bytesAvailableBetweeniConsumerAndEndOfBuffer));
+                memmove(callerBufferOffset, _buffer.get(), (totalBytesToRead - bytesAvailableBetweeniConsumerAndEndOfBuffer));
             }
         }
 
@@ -138,7 +138,7 @@ private:
     int _iConsumer; // index of next read location
     int _size;
     int _overwriteWhenFull;
-    unsigned char * const _buffer;
+    unique_ptr<unsigned char[]> _buffer;
     int _availableSpace()
     {
         return (_capacity - _size);
